@@ -78,9 +78,9 @@ joty [OPTIONS]
   
   Like:
 
-    ```bash
-    joty [OPTIONS]
-    ```
+  ```bash
+   joty [OPTIONS]
+  ```
 
 ## Disclaimer
 
