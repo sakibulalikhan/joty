@@ -8,10 +8,10 @@
  ▒▓▒▒░   ░ ▒░▒░▒░   ▒ ░░      ██▒▒▒ 
  ▒ ░▒░     ░ ▒ ▒░     ░     ▓██ ░▒░     
         
-        @sakibulalikhan -- The Magic Wapons installer for Arch!!!
+        @sakibulalikhan -- The Magic Wapons Installer for Arch!!!
 ```
 
-# Joty - The Magic Wapons for Arch!!!
+# Joty - The Magic Wapons Installer for Arch!!!
 
 Joty is a script designed to simplify the installation of various security and penetration testing tools on Arch Linux or Arch-based distributions. It comes with a set of predefined categories such as networks, exploits, forensics, web, utilities, osint, cloud, and recon, allowing users to install tools based on their specific needs.
 
@@ -44,11 +44,11 @@ joty [OPTIONS]
 
 ## Installation
 
-  ```bash
-  wget clone https://raw.githubusercontent.com/sakibulalikhan/joty/main/joty && sudo mv joty /usr/bin/ && sudo chmod +x /usr/bin/joty && joty
-  ```
+    ```bash
+    wget clone https://raw.githubusercontent.com/sakibulalikhan/joty/main/joty && sudo mv joty /usr/bin/ && sudo chmod +x /usr/bin/joty && joty
+    ```
 
- #### Manual Installation
+#### Manual Installation
 
 1. Clone the repository:
 
@@ -71,16 +71,16 @@ joty [OPTIONS]
 
 4. Optional step:
 
-  ```bash
-  sudo mv joty /usr/bin/
-  ```
+   ```bash
+   sudo mv joty /usr/bin/
+   ```
   It'll help you to execute the script any where from the Terminal.
   
   Like:
 
-  ```bash
-  joty [OPTIONS]
-  ```
+   ```bash
+   joty [OPTIONS]
+   ```
 
 ## Disclaimer
 
