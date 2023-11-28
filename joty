@@ -1,0 +1,153 @@
+#!/bin/bash
+
+# MIT License - https://github.com/sakibulalikhan/joty/blob/main/LICENSE
+# Copyright (c) 2023 Sakibul Ali Khan
+
+# Function to display warning message for non-Arch based distros
+show_warning() {
+    echo -e "\e[31m[X]\e[0m This script is designed to run on Arch-based distributions."
+    echo "Use Arch Linux or Arch based disto to conquer the world with power of black art!"
+    exit 1
+}
+
+# Detect OS and show warning for non-Arch based distros
+if [ -f "/etc/arch-release" ]; then
+    # Arch Linux or Arch-based distribution
+    :
+else
+    show_warning
+fi
+
+# Print script header
+cat << "EOF"
+
+ ▄▄▄██▀▀▀ ▒█████  ▄▄▄█████▓▓██   ██▓
+   ▒██   ▒██▒  ██▒▓  ██▒ ▓▒ ▒██  ██▒
+   ░██   ▒██░  ██▒▒ ▓██░ ▒░  ▒██ ██░
+▓██▄██▓  ▒██   ██░░ ▓██▓ ░   ░ ▐██▓░
+ ▓███▒   ░ ████▓▒░  ▒██▒ ░   ░ ██▒▓░
+ ▒▓▒▒░   ░ ▒░▒░▒░   ▒ ░░      ██▒▒▒ 
+ ▒ ░▒░     ░ ▒ ▒░     ░     ▓██ ░▒░     
+        
+        @sakibulalikhan -- The Magic Wapons for Arch!!!
+EOF
+
+# Function to check if a package is installed
+is_installed() {
+    pacman -Qi "$1" &> /dev/null
+}
+
+# Function to install a package using yay or pacman
+install_package() {
+    if is_installed "$1"; then
+        echo -e "\e[32m[✔]\e[0m $1 is already installed."
+    else
+        # Use yay directly, it will handle sudo if required
+        if yay -S --noconfirm "$1" &> /dev/null; then
+            echo -e "\e[32m[✔]\e[0m $1 has been installed."
+        else
+            echo -e "\e[31m[X]\e[0m Failed to install $1."
+        fi
+    fi
+}
+
+# Function to add BlackArch repository
+add_blackarch_repo() {
+    echo
+    echo "The BlackArch repository is not added to your system."
+    echo
+    read -p "Do you want to add the BlackArch repository? (y/N): " answer
+    if [ "$answer" == "y" ] || [ "$answer" == "Y" ]; then
+        echo -e "\e[1mAdding BlackArch Repository\e[0m"
+        curl -O https://blackarch.org/strap.sh
+        chmod +x strap.sh
+        sudo ./strap.sh
+        echo -e "\e[32m[✔]\e[0m BlackArch repository added successfully."
+    else
+        echo
+        echo "You chose not to add the BlackArch repository. Some tools may not be installable."
+    fi
+}
+
+# Function to display category headers
+display_category() {
+    echo -e "\n\e[1m$1\e[0m"
+}
+
+# Function to display script usage
+display_help() {
+    echo -e "\n\e[1mUsage:\e[0m"
+    echo "  -h, --help        Display this help message."
+    echo "  -a, --all         Install all tools."
+    echo "  -n, --networks    Install network tools."
+    echo "  -e, --exploits    Install exploitation tools."
+    echo "  -f, --forensics   Install forensics tools."
+    echo "  -w, --web         Install web application tools."
+    echo "  -u, --utilities   Install utility tools."
+    echo "  -o, --osint       Install OSINT tools."
+    echo "  -c, --cloud       Install cloud tools."
+    echo "  -r, --recon       Install recon tools."
+    exit 1
+}
+
+# Check if BlackArch repo is added
+if ! grep -q "blackarch" "/etc/pacman.conf"; then
+    add_blackarch_repo
+fi
+
+# Tool packages mapping
+declare -A categories=(
+    ["networks"]="nmap naabu assetfinder subjack takeover amass waybackurls jq gowitness httprobe wafw00f whatweb nikto tcpdump wireshark-qt quickscope ghidra sqlmap rustscan ghauri nosqlmap gobuster ffuf dirb seclists hydra-gtk metasploit-framework wpscan hashcat john binwalk foremost yara gdb autopsy wfuzz wapiti maltego haiti nuclei recon-ng ncat wget curl openssh hashid wordlists bind smbmap smbclient bloodhound net-tools whois impacket openldap impacket-GetNPUsers crackmapexec winrm evil-winrm mimikatz"
+    ["exploits"]="hydra-gtk metasploit-framework sqlmap wpscan joomscan deepce hashcat john bind smbmap smbclient bloodhound net-tools whois impacket openldap impacket crackmapexec winrm evil-winrm mimikatz sploitctl"
+    ["forensics"]="binwalk foremost yara gdb autopsy volatility3"
+    ["web"]="wfuzz wapiti maltego haiti nuclei recon-ng joomscan wpscan drupalscan drupwn cmseek cmsmap arjun sqlmap nosqlmap ffuf gobuster subfinder dalfox xsstrike vulmap"
+    ["utilities"]="ncat socat wget curl openssh hashid wordlistctl proxychains-ng"
+    ["osint"]="theharvester sherlock osint-spy spiderfoot recon-ng set"
+    ["cloud"]="awscli azure-cli gcloud openstack-cli terraform kubectl helm ansible packer s3scanner"
+    ["recon"]="joomscan drupalscan drupwn sqlmap nosqlmap ffuf gobuster subfinder"
+    ["all"]="${!categories[@]}"
+)
+
+# Parse command line options
+
+if [[ "$#" -eq 0 ]]; then
+    display_help
+fi
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -h|--help) display_help ;;
+        -a|--all) install_all=true; selected_category="${categories['all']}" ;;
+        -n|--networks) install_all=true; selected_category="${categories['networks']}" ;;
+        -e|--exploits) install_all=true; selected_category="${categories['exploits']}" ;;
+        -f|--forensics) install_all=true; selected_category="${categories['forensics']}" ;;
+        -w|--web) install_all=true; selected_category="${categories['web']}" ;;
+        -u|--utilities) install_all=true; selected_category="${categories['utilities']}" ;;
+        -o|--osint) install_all=true; selected_category="${categories['osint']}" ;;
+        -c|--cloud) install_all=true; selected_category="${categories['cloud']}" ;;
+        -r|--recon) install_all=true; selected_category="${categories['recon']}" ;;
+        *) echo "Unknown parameter: $1"; exit 1 ;;
+    esac
+    shift
+done
+
+echo -e "\e[1mInstalling Tools\e[0m"
+
+# Install yay if not installed
+if ! command -v yay &> /dev/null; then
+    echo -e "\e[1mInstalling Yay\e[0m"
+    sudo pacman -S --noconfirm yay &> /dev/null
+fi
+
+# Install tools based on selected category
+if [[ $install_all && -n $selected_category ]]; then
+    display_category "Installing Tools"
+    for tool in $selected_category; do
+        install_package "$tool"
+    done
+else
+    echo "No category selected. Please use -h or --help for usage information."
+    exit 1
+fi
+
+echo -e "\n\e[1mSelected tools have been installed successfully.\e[0m"
