@@ -44,9 +44,9 @@ joty [OPTIONS]
 
 ## Installation
 
-    ```bash
-    wget clone https://raw.githubusercontent.com/sakibulalikhan/joty/main/joty && sudo mv joty /usr/bin/ && sudo chmod +x /usr/bin/joty && joty
-    ```
+  ```bash
+   wget clone https://raw.githubusercontent.com/sakibulalikhan/joty/main/joty && sudo mv joty /usr/bin/ && sudo chmod +x /usr/bin/joty && joty
+  ```
 
 #### Manual Installation
 
@@ -78,9 +78,9 @@ joty [OPTIONS]
   
   Like:
 
-   ```bash
-   joty [OPTIONS]
-   ```
+    ```bash
+    joty [OPTIONS]
+    ```
 
 ## Disclaimer
 
