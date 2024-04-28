@@ -3,16 +3,16 @@
 # MIT License - https://github.com/sakibulalikhan/joty/blob/main/LICENSE
 # Copyright (c) 2023 Sakibul Ali Khan
 
-# Function to display warning message for non-Arch based distros
+# Function to display a warning message for non-Arch based distros
 show_warning() {
     echo -e "\e[31m[X]\e[0m This script is designed to run on Arch-based distributions."
-    echo "Use Arch Linux or Arch based disto to conquer the world with power of black art!"
+    echo "Use Arch Linux or Arch-based distro to conquer the world with the power of black art!"
     exit 1
 }
 
-# Detect OS and show warning for non-Arch based distros
-if [ -f "/etc/arch-release" ]; then
-    # Arch Linux or Arch-based distribution
+# Detect OS and show warning for non-Arch-based distros
+if [ -f "/etc/arch-release" ] || grep -qi "arch" /proc/version; then
+    # Arch Linux or Arch-based distribution or running in WSL with Arch
     :
 else
     show_warning
@@ -26,9 +26,9 @@ cat << "EOF"
    ░██   ▒██░  ██▒▒ ▓██░ ▒░  ▒██ ██░
 ▓██▄██▓  ▒██   ██░░ ▓██▓ ░   ░ ▐██▓░
  ▓███▒   ░ ████▓▒░  ▒██▒ ░   ░ ██▒▓░
- ▒▓▒▒░   ░ ▒░▒░▒░   ▒ ░░      ██▒▒▒ 
- ▒ ░▒░     ░ ▒ ▒░     ░     ▓██ ░▒░     
-        
+ ▒▓▒▒░   ░ ▒░▒░▒░   ▒ ░░      ██▒▒▒
+ ▒ ░▒░     ░ ▒ ▒░     ░     ▓██ ░▒░
+
         @sakibulalikhan -- The Magic Wapons for Arch!!!
 EOF
 
@@ -37,8 +37,18 @@ is_installed() {
     pacman -Qi "$1" &> /dev/null
 }
 
+# Function to re-prompt for sudo password if necessary
+prompt_sudo() {
+    sudo -v >/dev/null 2>&1
+    if [ $? -ne 0 ]; then
+        echo "Please enter your password for sudo:"
+        sudo -v
+    fi
+}
+
 # Function to install a package using yay or pacman
 install_package() {
+    prompt_sudo
     if is_installed "$1"; then
         echo -e "\e[32m[✔]\e[0m $1 is already installed."
     else
@@ -51,21 +61,26 @@ install_package() {
     fi
 }
 
-# Function to add BlackArch repository
+# Function to add BlackArch repository if not added already
 add_blackarch_repo() {
-    echo
-    echo "The BlackArch repository is not added to your system."
-    echo
-    read -p "Do you want to add the BlackArch repository? (y/N): " answer
-    if [ "$answer" == "y" ] || [ "$answer" == "Y" ]; then
-        echo -e "\e[1mAdding BlackArch Repository\e[0m"
-        curl -O https://blackarch.org/strap.sh
-        chmod +x strap.sh
-        sudo ./strap.sh
-        echo -e "\e[32m[✔]\e[0m BlackArch repository added successfully."
+    prompt_sudo
+    if grep -q "\[blackarch\]" /etc/pacman.conf; then
+        echo -e "\e[32m[✔]\e[0m BlackArch repository is already added."
     else
         echo
-        echo "You chose not to add the BlackArch repository. Some tools may not be installable."
+        echo "The BlackArch repository is not added to your system."
+        echo
+        read -p "Do you want to add the BlackArch repository? (y/N): " answer
+        if [ "$answer" == "y" ] || [ "$answer" == "Y" ]; then
+            echo -e "\e[1mAdding BlackArch Repository\e[0m"
+            curl -O https://blackarch.org/strap.sh
+            chmod +x strap.sh
+            sudo ./strap.sh
+            echo -e "\e[32m[✔]\e[0m BlackArch repository added successfully."
+        else
+            echo
+            echo "You chose not to add the BlackArch repository. Some tools may not be installable."
+        fi
     fi
 }
 
@@ -90,22 +105,37 @@ display_help() {
     exit 1
 }
 
-# Check if BlackArch repo is added
-if ! grep -q "blackarch" "/etc/pacman.conf"; then
-    add_blackarch_repo
-fi
+# Declare arrays for tool categories
+network_tools=(
+    "nmap" "naabu" "assetfinder" "subjack" "amass" "waybackurls" "jq" "gowitness" "httprobe" "wafw00f" "whatweb" "nikto" "tcpdump" "wireshark" "quickscope" "ghidra" "sqlmap" "rustscan" "ghauri" "nosqlmap" "gobuster" "ffuf" "dirb" "seclists" "hydra" "metasploit-framework" "wpscan" "hashcat" "john" "binwalk" "foremost" "yara" "gdb" "autopsy" "wfuzz" "wapiti" "maltego" "nuclei" "recon-ng" "ncat" "wget" "curl" "openssh" "hashid" "wordlists" "bind" "smbmap" "smbclient" "bloodhound" "net-tools" "whois" "impacket" "crackmapexec" "winrm" "evil-winrm" "mimikatz"
+)
 
-# Tool packages mapping
-declare -A categories=(
-    ["networks"]="nmap naabu assetfinder subjack takeover amass waybackurls jq gowitness httprobe wafw00f whatweb nikto tcpdump wireshark-qt quickscope ghidra sqlmap rustscan ghauri nosqlmap gobuster ffuf dirb seclists hydra-gtk metasploit-framework wpscan hashcat john binwalk foremost yara gdb autopsy wfuzz wapiti maltego haiti nuclei recon-ng ncat wget curl openssh hashid wordlists bind smbmap smbclient bloodhound net-tools whois impacket openldap impacket-GetNPUsers crackmapexec winrm evil-winrm mimikatz"
-    ["exploits"]="hydra-gtk metasploit-framework sqlmap wpscan joomscan deepce hashcat john bind smbmap smbclient bloodhound net-tools whois impacket openldap impacket crackmapexec winrm evil-winrm mimikatz sploitctl"
-    ["forensics"]="binwalk foremost yara gdb autopsy volatility3"
-    ["web"]="wfuzz wapiti maltego haiti nuclei recon-ng joomscan wpscan drupalscan drupwn cmseek cmsmap arjun sqlmap nosqlmap ffuf gobuster subfinder dalfox xsstrike vulmap"
-    ["utilities"]="ncat socat wget curl openssh hashid wordlistctl proxychains-ng"
-    ["osint"]="theharvester sherlock osint-spy spiderfoot recon-ng set"
-    ["cloud"]="awscli azure-cli gcloud openstack-cli terraform kubectl helm ansible packer s3scanner"
-    ["recon"]="joomscan drupalscan drupwn sqlmap nosqlmap ffuf gobuster subfinder"
-    ["all"]="${!categories[@]}"
+exploitation_tools=(
+    "hydra" "metasploit-framework" "sqlmap" "wpscan" "joomscan" "deepce" "hashcat" "john" "bind" "smbmap" "smbclient" "bloodhound" "net-tools" "whois" "impacket" "crackmapexec" "winrm" "evil-winrm" "mimikatz" "sploitctl"
+)
+
+forensics_tools=(
+    "binwalk" "foremost" "yara" "gdb" "autopsy" "volatility"
+)
+
+web_tools=(
+    "wfuzz" "wapiti" "maltego" "nuclei" "recon-ng" "joomscan" "wpscan" "drupalscan" "drupwn" "cmseek" "cmsmap" "arjun" "sqlmap" "nosqlmap" "ffuf" "gobuster" "subfinder" "dalfox" "xsstrike" "vulmap"
+)
+
+utility_tools=(
+    "ncat" "socat" "wget" "curl" "openssh" "hashid"
+)
+
+osint_tools=(
+    "theharvester" "sherlock" "spiderfoot" "recon-ng" "set"
+)
+
+cloud_tools=(
+    "awscli" "azure-cli" "gcloud" "openstack-cli" "terraform" "kubectl" "helm" "ansible" "packer" "s3scanner"
+)
+
+recon_tools=(
+    "joomscan" "drupalscan" "drupwn" "sqlmap" "nosqlmap" "ffuf" "gobuster" "subfinder"
 )
 
 # Parse command line options
@@ -117,15 +147,15 @@ fi
 while [[ $# -gt 0 ]]; do
     case $1 in
         -h|--help) display_help ;;
-        -a|--all) install_all=true; selected_category="${categories['all']}" ;;
-        -n|--networks) install_all=true; selected_category="${categories['networks']}" ;;
-        -e|--exploits) install_all=true; selected_category="${categories['exploits']}" ;;
-        -f|--forensics) install_all=true; selected_category="${categories['forensics']}" ;;
-        -w|--web) install_all=true; selected_category="${categories['web']}" ;;
-        -u|--utilities) install_all=true; selected_category="${categories['utilities']}" ;;
-        -o|--osint) install_all=true; selected_category="${categories['osint']}" ;;
-        -c|--cloud) install_all=true; selected_category="${categories['cloud']}" ;;
-        -r|--recon) install_all=true; selected_category="${categories['recon']}" ;;
+        -a|--all) install_all=true; ;;
+        -n|--networks) install_networks=true; ;;
+        -e|--exploits) install_exploits=true; ;;
+        -f|--forensics) install_forensics=true; ;;
+        -w|--web) install_web=true; ;;
+        -u|--utilities) install_utilities=true; ;;
+        -o|--osint) install_osint=true; ;;
+        -c|--cloud) install_cloud=true; ;;
+        -r|--recon) install_recon=true; ;;
         *) echo "Unknown parameter: $1"; exit 1 ;;
     esac
     shift
@@ -133,16 +163,55 @@ done
 
 echo -e "\e[1mInstalling Tools\e[0m"
 
-# Install yay if not installed
-if ! command -v yay &> /dev/null; then
-    echo -e "\e[1mInstalling Yay\e[0m"
-    sudo pacman -S --noconfirm yay &> /dev/null
-fi
+# Add BlackArch repository if not added already
+add_blackarch_repo
 
-# Install tools based on selected category
-if [[ $install_all && -n $selected_category ]]; then
-    display_category "Installing Tools"
-    for tool in $selected_category; do
+# Install tools based on selected categories
+if [[ $install_all ]]; then
+    display_category "Installing All Tools"
+    for category in network_tools exploitation_tools forensics_tools web_tools utility_tools osint_tools cloud_tools recon_tools; do
+        for tool in "${!category}"; do
+            install_package "$tool"
+        done
+    done
+elif [[ $install_networks ]]; then
+    display_category "Installing Network Tools"
+    for tool in "${network_tools[@]}"; do
+        install_package "$tool"
+    done
+elif [[ $install_exploits ]]; then
+    display_category "Installing Exploitation Tools"
+    for tool in "${exploitation_tools[@]}"; do
+        install_package "$tool"
+    done
+elif [[ $install_forensics ]]; then
+    display_category "Installing Forensics Tools"
+    for tool in "${forensics_tools[@]}"; do
+        install_package "$tool"
+    done
+elif [[ $install_web ]]; then
+    display_category "Installing Web Application Tools"
+    for tool in "${web_tools[@]}"; do
+        install_package "$tool"
+    done
+elif [[ $install_utilities ]]; then
+    display_category "Installing Utility Tools"
+    for tool in "${utility_tools[@]}"; do
+        install_package "$tool"
+    done
+elif [[ $install_osint ]]; then
+    display_category "Installing OSINT Tools"
+    for tool in "${osint_tools[@]}"; do
+        install_package "$tool"
+    done
+elif [[ $install_cloud ]]; then
+    display_category "Installing Cloud Tools"
+    for tool in "${cloud_tools[@]}"; do
+        install_package "$tool"
+    done
+elif [[ $install_recon ]]; then
+    display_category "Installing Recon Tools"
+    for tool in "${recon_tools[@]}"; do
         install_package "$tool"
     done
 else
