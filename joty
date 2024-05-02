@@ -37,18 +37,8 @@ is_installed() {
     pacman -Qi "$1" &> /dev/null
 }
 
-# Function to re-prompt for sudo password if necessary
-prompt_sudo() {
-    sudo -v >/dev/null 2>&1
-    if [ $? -ne 0 ]; then
-        echo "Please enter your password for sudo:"
-        sudo -v
-    fi
-}
-
 # Function to install a package using yay or pacman
 install_package() {
-    prompt_sudo
     if is_installed "$1"; then
         echo -e "\e[32m[✔]\e[0m $1 is already installed."
     else
@@ -63,7 +53,6 @@ install_package() {
 
 # Function to add BlackArch repository if not added already
 add_blackarch_repo() {
-    prompt_sudo
     if grep -q "\[blackarch\]" /etc/pacman.conf; then
         echo -e "\e[32m[✔]\e[0m BlackArch repository is already added."
     else
@@ -103,6 +92,19 @@ display_help() {
     echo "  -c, --cloud       Install cloud tools."
     echo "  -r, --recon       Install recon tools."
     exit 1
+}
+
+# Function to re-prompt for sudo password if necessary
+prompt_sudo() {
+    sudo -nv >/dev/null 2>&1
+    if [ $? -ne 0 ]; then
+        echo "Please enter your password for sudo:"
+        sudo -v >/dev/null 2>&1
+        if [ $? -ne 0 ]; then
+            echo "Incorrect password. Exiting..."
+            exit 1
+        fi
+    fi
 }
 
 # Declare arrays for tool categories
@@ -165,6 +167,9 @@ echo -e "\e[1mInstalling Tools\e[0m"
 
 # Add BlackArch repository if not added already
 add_blackarch_repo
+
+# Prompt for sudo password
+prompt_sudo
 
 # Install tools based on selected categories
 if [[ $install_all ]]; then
